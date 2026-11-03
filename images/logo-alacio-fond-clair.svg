@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" width="300" height="64">
+  <title>Alacio · Agence de design</title>
+  <g transform="translate(4 8)">
+    <path d="M24 0 L0 48 H13 L24 24 Z" fill="#1c1a18"/>
+    <path d="M24 0 L24 24 L35 48 H48 Z" fill="#e8a55c"/>
+  </g>
+  <text x="68" y="34" fill="#1c1a18" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="5">ALACIO</text>
+  <text x="69" y="54" fill="#6b645b" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif" font-size="11.5" letter-spacing="2.6">AGENCE DE DESIGN</text>
+</svg>
