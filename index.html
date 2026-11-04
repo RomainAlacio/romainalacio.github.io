@@ -8,8 +8,8 @@
 <meta property="og:title" content="Alacio · Agence de design, vidéos produit en 3D">
 <meta property="og:description" content="Pubs produit en 3D, démos d'application et vidéos pour les réseaux, sans shooting.">
 <meta property="og:image" content="https://portfolio.alacio.fr/images/solene.jpg">
-<meta property="og:url" content="https://portfolio.alacio.fr/">
 <meta property="og:locale" content="fr_FR">
+<meta property="og:url" content="https://portfolio.alacio.fr/">
 <meta name="theme-color" content="#0f0e0d">
 <link rel="alternate" hreflang="fr" href="https://portfolio.alacio.fr/">
 <link rel="alternate" hreflang="en" href="https://portfolio.alacio.fr/en.html">
@@ -31,7 +31,21 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141210'/%3E%3Cpath d='M16 5 L5 27 H11 L16 16 Z' fill='%23f1ece4'/%3E%3Cpath d='M16 5 L16 16 L21 27 H27 Z' fill='%23e8a55c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // Rideau d'ouverture : une seule fois par visite, jamais si le visiteur limite les animations.
+  (function () {
+    var h = document.documentElement;
+    h.classList.add("js");
+    var calme = matchMedia("(prefers-reduced-motion: reduce)").matches, deja = false;
+    try { deja = sessionStorage.getItem("alacio-rideau") === "1"; sessionStorage.setItem("alacio-rideau", "1"); } catch (e) {}
+    if (!calme && !deja) {
+      h.classList.add("attente");
+      setTimeout(function () { h.classList.remove("attente"); }, 3500); // filet de sécurité
+    }
+  })();
+</script>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
 <style>
   :root {
     --fond: #0f0e0d;
@@ -45,224 +59,308 @@
     --accent: #e8a55c;
     --accent-2: #f3c48d;
     --vert: #25d366;
+    --creme: #f1ece4;
+    --encre: #171411;
     --serif: "Fraunces", Georgia, "Times New Roman", serif;
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     --r: 18px;
+    --sortie: cubic-bezier(.16, 1, .3, 1);
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html { -webkit-text-size-adjust: 100%; }
+  html:not(.lenis) { scroll-behavior: smooth; }
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-stopped { overflow: hidden; }
   body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.6 var(--sans); overflow-x: hidden; }
   a { color: inherit; }
   img, video { max-width: 100%; }
-  .page { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+  button { font: inherit; color: inherit; }
+  .page { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
   ::selection { background: var(--accent); color: var(--fond); }
 
-  /* grain + halo */
+  /* grain */
   body::before {
-    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: .05;
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: .055;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  .halo { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; opacity: .35; }
+  .halo { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; opacity: .3; }
+
+  /* rideau d'ouverture */
+  .rideau { display: none; position: fixed; inset: 0; z-index: 200; background: var(--fond); place-items: center; transition: transform 1s var(--sortie); }
+  html.attente .rideau, html.sortie .rideau { display: grid; }
+  html.sortie .rideau { transform: translateY(-100%); }
+  .rideau-centre { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .rideau svg { width: 64px; height: 64px; overflow: visible; }
+  .rideau svg path { stroke-width: .8; stroke-dasharray: 140; stroke-dashoffset: 140; fill-opacity: 0; animation: trace 1s var(--sortie) forwards, remplit .4s ease .75s forwards; }
+  .rideau svg path + path { animation-delay: .12s, .85s; }
+  .rideau b { font-size: 15px; letter-spacing: .5em; margin-right: -.5em; opacity: 0; animation: apparait .6s ease .5s forwards; }
+  @keyframes trace { to { stroke-dashoffset: 0; } }
+  @keyframes remplit { to { fill-opacity: 1; } }
+  @keyframes apparait { to { opacity: 1; } }
+
+  /* curseur personnalisé (souris uniquement) */
+  .curseur { display: none; }
+  html.curseur-perso, html.curseur-perso * { cursor: none !important; }
+  html.curseur-perso .curseur { display: block; }
+  .curseur span { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; border-radius: 50%; will-change: transform; }
+  .curseur .point { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--accent); }
+  .curseur .anneau { width: 40px; height: 40px; margin: -20px 0 0 -20px; border: 1px solid rgba(241, 236, 228, .35); display: grid; place-items: center; transition: width .35s var(--sortie), height .35s var(--sortie), margin .35s var(--sortie), background .3s, border-color .3s, opacity .3s; }
+  .curseur .anneau em { font-style: normal; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--fond); opacity: 0; transition: opacity .2s; white-space: nowrap; }
+  .curseur.lien .anneau { width: 62px; height: 62px; margin: -31px 0 0 -31px; border-color: var(--accent); background: rgba(232, 165, 92, .08); }
+  .curseur.video .anneau { width: 104px; height: 104px; margin: -52px 0 0 -52px; background: var(--accent); border-color: var(--accent); }
+  .curseur.video .anneau em { opacity: 1; }
+  .curseur.video .point { opacity: 0; }
+  .curseur.cache span { opacity: 0; }
 
   /* barre de progression */
   .progression { position: fixed; top: 0; left: 0; height: 2px; width: 100%; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--accent), var(--accent-2)); z-index: 60; }
 
   /* navigation */
-  nav.haut { position: sticky; top: 0; z-index: 50; transition: background .3s, border-color .3s, backdrop-filter .3s; border-bottom: 1px solid transparent; }
-  nav.haut.pleine { background: rgba(15, 14, 13, .82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: var(--trait); }
-  nav.haut .page { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 76px; }
+  nav.haut { position: fixed; top: 0; left: 0; right: 0; z-index: 50; transition: background .3s, border-color .3s, transform .5s var(--sortie); border-bottom: 1px solid transparent; }
+  nav.haut.pleine { background: rgba(15, 14, 13, .78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: var(--trait); }
+  nav.haut.masquee { transform: translateY(-100%); }
+  nav.haut .page { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 78px; }
   .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
   .logo svg { width: 32px; height: 32px; flex: none; }
   .logo b { display: block; font-size: 17px; letter-spacing: .26em; line-height: 1.1; }
   .logo small { display: block; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--doux); margin-top: 3px; }
   .liens { display: flex; align-items: center; gap: 28px; font-size: 14.5px; }
-  .liens a { text-decoration: none; color: var(--doux); transition: color .2s; }
-  .liens a:hover { color: var(--texte); }
+  .liens > a:not(.bouton) { position: relative; text-decoration: none; color: var(--doux); transition: color .2s; }
+  .liens > a:not(.bouton)::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: var(--accent); transform: scaleX(0); transform-origin: 100% 50%; transition: transform .45s var(--sortie); }
+  .liens > a:not(.bouton):hover { color: var(--texte); }
+  .liens > a:not(.bouton):hover::after { transform: scaleX(1); transform-origin: 0 50%; }
 
-  /* choix de la langue */
   .langues { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--trait); border-radius: 999px; }
-  .liens .langues a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; transition: background .2s, color .2s; }
+  .langues a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; color: var(--doux); text-decoration: none; transition: background .2s, color .2s; }
+  .langues a:hover { color: var(--texte); }
   .langues a[aria-current] { background: var(--carte-2); color: var(--texte); }
   .langues svg { width: 20px; height: 14px; border-radius: 3px; flex: none; box-shadow: 0 0 0 1px rgba(255, 255, 255, .12); }
-  .langues a:not([aria-current]) svg { opacity: .7; transition: opacity .2s; }
-  .langues a:hover svg { opacity: 1; }
+  .langues a:not([aria-current]) svg { opacity: .7; }
 
-  .bouton { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; transition: transform .2s, background .2s, box-shadow .2s, color .2s; white-space: nowrap; }
-  .bouton:hover { transform: translateY(-2px); }
+  .bouton { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 999px; border: 0; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer; transition: background .25s, box-shadow .25s, color .25s, border-color .25s; white-space: nowrap; will-change: transform; }
   .bouton svg { width: 18px; height: 18px; flex: none; }
   .bouton.plein { background: var(--texte); color: var(--fond); }
-  .bouton.plein:hover { background: var(--accent); box-shadow: 0 10px 30px -10px rgba(232, 165, 92, .6); }
-  .bouton.vide { border: 1px solid var(--trait); color: var(--texte); }
+  .bouton.plein:hover { background: var(--accent); box-shadow: 0 12px 34px -10px rgba(232, 165, 92, .65); }
+  .bouton.vide { border: 1px solid var(--trait); color: var(--texte); background: transparent; }
   .bouton.vide:hover { border-color: var(--accent); color: var(--accent); }
   .bouton.wa { background: var(--vert); color: #06210f; }
-  .bouton.wa:hover { box-shadow: 0 10px 30px -10px rgba(37, 211, 102, .6); }
+  .bouton.wa:hover { box-shadow: 0 12px 34px -10px rgba(37, 211, 102, .65); }
   .bouton.petit { padding: 10px 18px; font-size: 14px; }
 
   /* héros */
-  .heros { position: relative; padding: 56px 0 96px; }
-  .heros .page { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
+  .heros { position: relative; min-height: 100vh; min-height: 100svh; padding: 120px 0 90px; display: flex; align-items: center; overflow: hidden; }
+  #scene3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 1.4s ease .3s; }
+  html.trois-d #scene3d { opacity: 1; }
+  .heros > .page { position: relative; z-index: 1; width: 100%; display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
   .surtitre { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 0 22px; }
   .surtitre::before { content: ""; width: 28px; height: 1px; background: var(--accent); }
-  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 6.4vw, 78px); line-height: 1.02; letter-spacing: -.02em; margin: 0 0 26px; }
-  h1 .mot { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .16em; margin-bottom: -.08em; }
-  h1 .mot > span { display: inline-block; transform: translateY(105%); animation: monte .9s cubic-bezier(.2, .8, .2, 1) forwards; }
-  h1 em { font-style: italic; background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 45%, var(--accent) 60%, #c9813c 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: monte .9s cubic-bezier(.2, .8, .2, 1) forwards, reflet 6s ease-in-out 1.2s infinite; }
+  h1 { font-family: var(--serif); font-weight: 300; font-size: clamp(46px, 7.4vw, 104px); line-height: .98; letter-spacing: -.03em; margin: 0 0 28px; }
+  .mot { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .14em; margin-bottom: -.1em; }
+  .mot > span { display: inline-block; will-change: transform; }
+  h1 .mot > span { transform: translateY(110%); animation: monte 1.1s var(--sortie) forwards; }
+  html.attente h1 .mot > span, html.attente .heros .entree { animation-play-state: paused; }
+  h1 em { font-style: italic; font-weight: 400; background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 45%, var(--accent) 60%, #c9813c 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out 1.6s infinite; }
   @keyframes monte { to { transform: none; } }
   @keyframes reflet { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
-  .chapo { font-size: 19px; color: var(--doux); max-width: 50ch; margin: 0 0 34px; }
+  .entree { opacity: 0; transform: translateY(24px); animation: entre 1s var(--sortie) forwards; animation-delay: var(--d, .5s); }
+  @keyframes entre { to { opacity: 1; transform: none; } }
+  .chapo { font-size: 19px; color: var(--doux); max-width: 48ch; margin: 0 0 36px; }
   .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-  .garanties { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 34px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--doux); }
+  .garanties { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 36px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--doux); }
   .garanties li::before { content: "✓"; color: var(--accent); margin-right: 8px; font-weight: 700; }
 
   .scene { position: relative; display: flex; justify-content: center; perspective: 1200px; }
-  .telephone { position: relative; width: min(300px, 78vw); aspect-ratio: 9 / 16; border-radius: 40px; padding: 10px; background: linear-gradient(150deg, #2b2724, #121110 60%); box-shadow: 0 50px 100px -30px rgba(0, 0, 0, .8), 0 0 0 1px #3a352f inset, 0 0 80px -20px rgba(232, 165, 92, .35); transform: rotateY(-14deg) rotateX(6deg); transition: transform .4s ease-out; animation: flotte 7s ease-in-out infinite; }
-  .telephone video { width: 100%; height: 100%; object-fit: cover; border-radius: 31px; display: block; background: #000; }
+  .telephone { position: relative; width: min(300px, 78vw); aspect-ratio: 9 / 16; border-radius: 42px; padding: 10px; background: linear-gradient(150deg, #2b2724, #121110 60%); box-shadow: 0 60px 110px -30px rgba(0, 0, 0, .85), 0 0 0 1px #3a352f inset; transform: rotateY(-12deg) rotateX(5deg); transition: transform .6s var(--sortie); }
+  .telephone video { width: 100%; height: 100%; object-fit: cover; border-radius: 32px; display: block; background: #000; }
   .telephone::after { content: ""; position: absolute; top: 18px; left: 50%; width: 70px; height: 18px; margin-left: -35px; border-radius: 99px; background: #000; }
+  .flotte { animation: flotte 7s ease-in-out infinite; }
   @keyframes flotte { 0%, 100% { translate: 0 0; } 50% { translate: 0 -14px; } }
-  .prisme { position: absolute; width: 120px; height: 120px; right: -10px; bottom: 30px; animation: tourne 14s linear infinite; transform-style: preserve-3d; }
-  .prisme svg { width: 100%; height: 100%; filter: drop-shadow(0 20px 30px rgba(232, 165, 92, .25)); }
+  .prisme { position: absolute; width: 120px; height: 120px; right: -10px; bottom: 30px; animation: tourne 14s linear infinite; }
+  .prisme svg { width: 100%; height: 100%; }
+  html.trois-d .prisme { display: none; }
   @keyframes tourne { 0% { transform: rotateY(0) rotateZ(-8deg); } 100% { transform: rotateY(360deg) rotateZ(-8deg); } }
-  .etiquette { position: absolute; left: -24px; top: 18%; background: rgba(26, 24, 22, .9); border: 1px solid var(--trait); border-radius: 14px; padding: 10px 14px; font-size: 13px; color: var(--doux); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: flotte 6s ease-in-out -2s infinite; }
+  .etiquette { position: absolute; z-index: 2; left: -34px; top: 16%; background: rgba(26, 24, 22, .82); border: 1px solid var(--trait); border-radius: 14px; padding: 10px 14px; font-size: 13px; color: var(--doux); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .etiquette b { display: block; color: var(--texte); font-size: 15px; }
-  .etiquette.deux { left: auto; right: -20px; top: auto; bottom: 24%; animation-delay: -4s; }
+  .etiquette.deux { left: auto; right: -28px; top: auto; bottom: 22%; }
+  .defiler { position: absolute; z-index: 1; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--pale); }
+  .defiler i { width: 1px; height: 44px; background: linear-gradient(var(--accent), transparent); transform-origin: 50% 0; animation: goutte 2.2s var(--sortie) infinite; }
+  @keyframes goutte { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
 
   /* bandeau défilant */
-  .bandeau { border-top: 1px solid var(--trait); border-bottom: 1px solid var(--trait); overflow: hidden; padding: 18px 0; background: var(--fond-2); }
+  .bandeau { border-top: 1px solid var(--trait); border-bottom: 1px solid var(--trait); overflow: hidden; padding: 22px 0; background: var(--fond-2); }
   .bandeau .piste { display: flex; width: max-content; animation: defile 38s linear infinite; }
-  .bandeau span { font-family: var(--serif); font-size: 22px; color: var(--doux); padding: 0 28px; white-space: nowrap; display: inline-flex; align-items: center; gap: 56px; }
-  .bandeau span::after { content: "◆"; font-size: 10px; color: var(--accent); }
+  html.gsap .bandeau .piste { animation: none; }
+  .bandeau span { font-family: var(--serif); font-weight: 300; font-size: clamp(22px, 2.6vw, 34px); color: var(--doux); padding: 0 32px; white-space: nowrap; display: inline-flex; align-items: center; gap: 64px; }
+  .bandeau span:nth-child(odd) { font-style: italic; color: var(--texte); }
+  .bandeau span::after { content: "◆"; font-size: 10px; color: var(--accent); font-style: normal; }
   @keyframes defile { to { transform: translateX(-50%); } }
 
   /* sections */
-  section { position: relative; padding: 110px 0; }
-  .entete { max-width: 680px; margin-bottom: 56px; }
+  section { position: relative; padding: 130px 0; }
+  .entete { max-width: 720px; margin-bottom: 60px; }
   .entete.centre { margin-left: auto; margin-right: auto; text-align: center; }
   .entete.centre .surtitre { justify-content: center; }
-  h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(32px, 4.6vw, 52px); line-height: 1.08; letter-spacing: -.015em; margin: 0 0 18px; }
-  h2 em { font-style: italic; color: var(--accent); }
+  h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(36px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -.025em; margin: 0 0 20px; }
+  h2 em { font-style: italic; font-weight: 400; color: var(--accent); }
   .entete p { color: var(--doux); font-size: 17.5px; margin: 0; }
+
+  /* manifeste */
+  .manifeste { padding: 150px 0 120px; }
+  .manifeste p { font-family: var(--serif); font-weight: 300; font-size: clamp(32px, 5vw, 66px); line-height: 1.12; letter-spacing: -.02em; margin: 0; max-width: 20ch; }
+  .manifeste p .mot > span { opacity: var(--o, 1); }
+  html.gsap .manifeste p .mot > span { --o: .14; }
+  .manifeste p em { font-style: italic; color: var(--accent); }
+  .manifeste .signe { display: flex; align-items: center; gap: 14px; margin-top: 44px; color: var(--doux); font-size: 15px; }
+  .manifeste .signe::before { content: ""; width: 44px; height: 1px; background: var(--accent); }
 
   /* chiffres */
   .chiffres { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--trait); border: 1px solid var(--trait); border-radius: var(--r); overflow: hidden; }
-  .chiffres div { background: var(--fond); padding: 30px 24px; }
-  .chiffres b { display: block; font-family: var(--serif); font-weight: 400; font-size: clamp(34px, 4vw, 48px); line-height: 1; color: var(--texte); margin-bottom: 10px; }
+  .chiffres div { background: var(--fond); padding: 32px 26px; }
+  .chiffres b { display: block; font-family: var(--serif); font-weight: 300; font-size: clamp(38px, 4.4vw, 58px); line-height: 1; color: var(--texte); margin-bottom: 12px; font-variant-numeric: tabular-nums; }
   .chiffres span { color: var(--doux); font-size: 14.5px; }
 
-  /* réalisations */
-  .projets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
-  .projet { margin: 0; }
-  .ecran { position: relative; aspect-ratio: 9 / 16; border-radius: var(--r); overflow: hidden; background: var(--carte); border: 1px solid var(--trait); transition: transform .4s, box-shadow .4s, border-color .4s; }
-  .projet:hover .ecran { transform: translateY(-6px); box-shadow: 0 30px 60px -30px rgba(232, 165, 92, .35); border-color: #4a4239; }
-  .ecran video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .projet .type { display: inline-block; margin: 18px 0 6px; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-  .projet h3 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
-  .projet p { margin: 0; color: var(--doux); font-size: 15px; }
-  .fictif { display: flex; gap: 10px; align-items: flex-start; color: var(--doux); font-size: 14px; margin: 36px 0 0; padding: 16px 18px; border: 1px dashed var(--trait); border-radius: 12px; }
+  /* réalisations : défilement horizontal sur ordinateur */
+  .realisations { padding-bottom: 0; }
+  .horizontal { position: relative; margin-top: 90px; }
+  .piste-h { display: flex; flex-direction: column; gap: 80px; padding: 0 24px; max-width: 520px; margin: 0 auto; }
+  .panneau { display: grid; gap: 26px; }
+  .panneau .ecran { position: relative; aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: var(--carte); border: 1px solid var(--trait); cursor: pointer; }
+  .panneau .ecran video, .panneau .ecran img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--sortie); }
+  .panneau .ecran:hover video, .panneau .ecran:hover img { transform: scale(1.035); }
+  .panneau .lire { position: absolute; left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; border-radius: 99px; border: 0; background: rgba(15, 14, 13, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .panneau .lire i { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; }
+  .panneau .lire i::before { content: ""; margin-left: 2px; border-left: 8px solid var(--fond); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .panneau .numero { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(64px, 8vw, 130px); line-height: .9; color: transparent; -webkit-text-stroke: 1px rgba(232, 165, 92, .55); display: block; margin-bottom: 14px; }
+  .panneau .type { display: inline-block; margin: 0 0 10px; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .panneau h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(28px, 3vw, 42px); line-height: 1.1; margin: 0 0 14px; }
+  .panneau p { margin: 0; color: var(--doux); font-size: 16px; max-width: 42ch; }
+  .compteur-h { display: none; }
+  .fictif { display: flex; gap: 10px; align-items: flex-start; color: var(--doux); font-size: 14px; margin: 70px 0 0; padding: 16px 18px; border: 1px dashed var(--trait); border-radius: 12px; }
   .fictif::before { content: "i"; flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--pale); font-size: 12px; font-style: italic; font-family: var(--serif); }
+
+  @media (min-width: 1021px) {
+    html.gsap .horizontal { height: 100vh; overflow: hidden; display: flex; align-items: center; margin-top: 40px; }
+    html.gsap .piste-h { flex-direction: row; align-items: center; gap: 9vw; padding: 0 9vw; max-width: none; margin: 0; width: max-content; will-change: transform; }
+    html.gsap .panneau { flex: none; grid-template-columns: calc(min(76vh, 780px) * 9 / 16) minmax(300px, 420px); gap: 64px; align-items: center; }
+    html.gsap .panneau .ecran { height: min(76vh, 780px); width: 100%; }
+    html.gsap .compteur-h { display: flex; position: absolute; left: 9vw; bottom: 5vh; align-items: center; gap: 16px; font-size: 13px; letter-spacing: .14em; color: var(--pale); }
+    html.gsap .compteur-h .jauge { width: 160px; height: 1px; background: var(--trait); position: relative; overflow: hidden; }
+    html.gsap .compteur-h .jauge i { position: absolute; inset: 0; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+  }
 
   /* objectifs et services */
   .objectifs { display: grid; gap: 22px; }
-  .objectif { display: grid; grid-template-columns: 280px 1fr; gap: 28px; padding: 30px; border-radius: var(--r); background: var(--carte); border: 1px solid var(--trait); position: relative; overflow: hidden; }
-  .objectif::before { content: ""; position: absolute; inset: 0; background: radial-gradient(500px circle at var(--x, 50%) var(--y, 50%), rgba(232, 165, 92, .09), transparent 45%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .objectif { display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding: 34px; border-radius: 24px; background: var(--carte); border: 1px solid var(--trait); position: relative; overflow: hidden; }
+  .objectif::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px circle at var(--x, 50%) var(--y, 50%), rgba(232, 165, 92, .1), transparent 45%); opacity: 0; transition: opacity .3s; pointer-events: none; }
   .objectif:hover::before { opacity: 1; }
   .objectif .num { font-family: var(--serif); font-size: 15px; color: var(--accent); }
-  .objectif h3 { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.15; margin: 6px 0 10px; }
+  .objectif h3 { font-family: var(--serif); font-weight: 300; font-size: 32px; line-height: 1.1; margin: 6px 0 12px; }
   .objectif > div > p { margin: 0; color: var(--doux); font-size: 15px; }
   .formats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  .format { padding: 18px 18px 16px; border-radius: 14px; background: var(--fond-2); border: 1px solid var(--trait); transition: border-color .25s, transform .25s; }
-  .format:hover { border-color: #4a4239; transform: translateY(-2px); }
+  .format { padding: 18px 18px 16px; border-radius: 14px; background: var(--fond-2); border: 1px solid var(--trait); transition: border-color .25s, transform .4s var(--sortie); }
+  .format:hover { border-color: #4a4239; transform: translateY(-3px); }
   .format strong { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 16px; margin-bottom: 6px; }
   .format span { color: var(--doux); font-size: 14.5px; display: block; }
   .pastille { flex: none; font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 3px 9px; border-radius: 99px; background: rgba(232, 165, 92, .14); color: var(--accent); text-decoration: none; }
   a.pastille:hover { background: var(--accent); color: var(--fond); }
-  .diffusion { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 44px; }
-  .diffusion span { padding: 8px 16px; border-radius: 99px; border: 1px solid var(--trait); color: var(--doux); font-size: 14px; }
+  .diffusion { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 48px; }
+  .diffusion span { padding: 8px 16px; border-radius: 99px; border: 1px solid var(--trait); color: var(--doux); font-size: 14px; transition: border-color .2s, color .2s; }
+  .diffusion span:hover { border-color: var(--accent); color: var(--texte); }
 
   /* méthode */
-  .etapes { position: relative; display: grid; gap: 0; max-width: 820px; margin: 0 auto; }
+  .etapes { position: relative; display: grid; max-width: 860px; margin: 0 auto; }
   .etapes::before { content: ""; position: absolute; left: 27px; top: 10px; bottom: 10px; width: 2px; background: var(--trait); }
-  .fil { position: absolute; left: 27px; top: 10px; width: 2px; height: calc(100% - 20px); transform-origin: 50% 0; transform: scaleY(var(--fil, 0)); background: linear-gradient(var(--accent), var(--accent-2)); }
-  .etape { position: relative; display: grid; grid-template-columns: 56px 1fr; gap: 26px; padding: 0 0 46px; }
+  .fil { position: absolute; left: 27px; top: 10px; width: 2px; height: calc(100% - 20px); transform-origin: 50% 0; transform: scaleY(0); background: linear-gradient(var(--accent), var(--accent-2)); box-shadow: 0 0 18px rgba(232, 165, 92, .6); }
+  html:not(.gsap) .fil { transform: scaleY(1); }
+  .etape { position: relative; display: grid; grid-template-columns: 56px 1fr; gap: 28px; padding: 0 0 52px; }
   .etape:last-child { padding-bottom: 0; }
-  .etape .rond { position: relative; z-index: 1; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--fond); border: 2px solid var(--trait); font-family: var(--serif); font-size: 20px; color: var(--doux); transition: border-color .4s, color .4s, background .4s, box-shadow .4s; }
-  .etape.active .rond { border-color: var(--accent); color: var(--fond); background: var(--accent); box-shadow: 0 0 0 6px rgba(232, 165, 92, .12); }
-  .etape h3 { font-size: 20px; font-weight: 600; margin: 12px 0 6px; }
+  .etape .rond { position: relative; z-index: 1; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--fond); border: 2px solid var(--trait); font-family: var(--serif); font-size: 20px; color: var(--doux); transition: border-color .5s, color .5s, background .5s, box-shadow .5s, transform .5s var(--sortie); }
+  .etape.active .rond { border-color: var(--accent); color: var(--fond); background: var(--accent); box-shadow: 0 0 0 7px rgba(232, 165, 92, .12); transform: scale(1.06); }
+  html:not(.gsap) .etape .rond { border-color: var(--accent); color: var(--accent); }
+  .etape h3 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 10px 0 8px; }
   .etape p { margin: 0; color: var(--doux); }
-  .etape .valide { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--accent); }
+  .etape .valide { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--accent); }
 
-  /* équipe / métiers */
-  .metiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-  .metier { padding: 26px 22px; border-radius: var(--r); background: var(--carte); border: 1px solid var(--trait); transition: transform .3s, border-color .3s; }
-  .metier:hover { transform: translateY(-4px); border-color: #4a4239; }
-  .metier .icone { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(232, 165, 92, .12); margin-bottom: 18px; }
+  /* métiers */
+  .metiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; perspective: 900px; }
+  .metier { padding: 28px 22px; border-radius: var(--r); background: var(--carte); border: 1px solid var(--trait); transition: border-color .3s, transform .5s var(--sortie); transform-style: preserve-3d; }
+  .metier:hover { border-color: #4a4239; }
+  .metier .icone { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: rgba(232, 165, 92, .12); margin-bottom: 20px; transform: translateZ(30px); }
   .metier .icone svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .metier h3 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+  .metier h3 { font-size: 17px; font-weight: 600; margin: 0 0 8px; transform: translateZ(20px); }
   .metier p { margin: 0; color: var(--doux); font-size: 14.5px; }
 
   /* fondateur */
-  .fondateur { display: grid; grid-template-columns: .8fr 1.2fr; gap: 64px; align-items: center; }
-  .portrait { position: relative; aspect-ratio: 4 / 5; border-radius: 26px; overflow: hidden; background: radial-gradient(120% 90% at 30% 20%, #3a2a1b 0%, #1a1613 55%, #0f0e0d 100%); border: 1px solid var(--trait); display: grid; place-items: center; }
-  .portrait .initiale { font-family: var(--serif); font-style: italic; font-size: clamp(140px, 18vw, 220px); line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(232, 165, 92, .7); }
+  .fondateur { display: grid; grid-template-columns: .8fr 1.2fr; gap: 72px; align-items: center; }
+  .portrait { position: relative; aspect-ratio: 4 / 5; border-radius: 28px; overflow: hidden; background: radial-gradient(120% 90% at 30% 20%, #3a2a1b 0%, #1a1613 55%, #0f0e0d 100%); border: 1px solid var(--trait); display: grid; place-items: center; }
+  .portrait .initiale { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(150px, 19vw, 250px); line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(232, 165, 92, .75); }
   .portrait .signature { position: absolute; left: 24px; bottom: 22px; right: 24px; }
   .portrait .signature b { display: block; font-size: 20px; }
   .portrait .signature span { color: var(--doux); font-size: 14px; }
-  .lumiere { position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 70%, rgba(232, 165, 92, .18) 80%, transparent 90%); animation: balaie 9s linear infinite; }
+  .lumiere { position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 70%, rgba(232, 165, 92, .2) 80%, transparent 90%); animation: balaie 9s linear infinite; }
   @keyframes balaie { to { transform: rotate(360deg); } }
-  .citation { font-family: var(--serif); font-size: clamp(24px, 2.8vw, 32px); line-height: 1.3; margin: 0 0 26px; }
-  .citation::before { content: "« "; color: var(--accent); }
-  .citation::after { content: " »"; color: var(--accent); }
-  .fondateur p.texte { color: var(--doux); font-size: 16.5px; margin: 0 0 16px; }
+  .fondateur p.texte { color: var(--doux); font-size: 17px; margin: 0 0 18px; }
 
-  /* pourquoi nous */
+  /* pourquoi nous : section claire */
+  .claire { background: var(--creme); color: var(--encre); border-radius: 36px 36px 0 0; --doux: #5d554c; --trait: #d8cfc2; --accent: #b4692a; }
+  .claire + .claire-suite { background: var(--creme); color: var(--encre); --doux: #5d554c; --trait: #d8cfc2; --accent: #b4692a; border-radius: 0 0 36px 36px; }
   .raisons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--trait); border: 1px solid var(--trait); border-radius: var(--r); overflow: hidden; }
-  .raison { background: var(--fond); padding: 34px 30px; transition: background .3s; }
-  .raison:hover { background: var(--fond-2); }
-  .raison .num { font-family: var(--serif); font-style: italic; color: var(--accent); font-size: 18px; }
-  .raison h3 { font-size: 19px; font-weight: 600; margin: 10px 0 8px; }
+  .raison { background: var(--creme); padding: 38px 32px; transition: background .3s; }
+  .raison:hover { background: #ebe4d8; }
+  .raison .num { font-family: var(--serif); font-style: italic; color: var(--accent); font-size: 20px; }
+  .raison h3 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 12px 0 10px; }
   .raison p { margin: 0; color: var(--doux); font-size: 15px; }
 
   /* livrables */
-  .livrables { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+  .livrables { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
   .liste-livrables { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
-  .liste-livrables li { display: flex; justify-content: space-between; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--trait); }
+  .liste-livrables li { display: flex; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--trait); }
   .liste-livrables li b { font-weight: 600; }
   .liste-livrables li span { color: var(--doux); font-size: 14.5px; text-align: right; }
 
   /* questions */
-  .questions { max-width: 820px; margin: 0 auto; }
+  .questions { max-width: 860px; margin: 0 auto; }
   details { border-bottom: 1px solid var(--trait); }
   details:first-child { border-top: 1px solid var(--trait); }
-  summary { list-style: none; cursor: pointer; padding: 24px 44px 24px 0; position: relative; font-size: 18px; font-weight: 500; }
+  summary { list-style: none; cursor: pointer; padding: 26px 48px 26px 0; position: relative; font-family: var(--serif); font-size: 22px; font-weight: 400; transition: color .2s; }
+  summary:hover { color: var(--accent); }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: ""; position: absolute; right: 8px; top: 50%; width: 12px; height: 12px; margin-top: -8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); transition: transform .3s; }
+  summary::after { content: ""; position: absolute; right: 10px; top: 50%; width: 12px; height: 12px; margin-top: -8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); transition: transform .4s var(--sortie); }
   details[open] summary::after { transform: rotate(225deg); margin-top: -2px; }
-  details p { margin: 0 0 24px; color: var(--doux); max-width: 64ch; }
+  details .reponse { overflow: hidden; }
+  details p { margin: 0 0 26px; color: var(--doux); max-width: 64ch; }
 
   /* appel final */
-  .final { text-align: center; padding: 120px 0; overflow: hidden; }
-  .final h2 { font-size: clamp(36px, 6vw, 70px); max-width: 16ch; margin: 0 auto 22px; }
-  .final p { color: var(--doux); font-size: 18px; max-width: 52ch; margin: 0 auto 36px; }
+  .final { text-align: center; padding: 150px 0; overflow: hidden; }
+  .final h2 { font-size: clamp(42px, 8vw, 112px); max-width: 14ch; margin: 0 auto 26px; }
+  .final p { color: var(--doux); font-size: 18px; max-width: 52ch; margin: 0 auto 40px; }
   .final .actions { justify-content: center; }
-  .coordonnees { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 32px; margin-top: 34px; color: var(--doux); font-size: 15px; }
+  .coordonnees { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 32px; margin-top: 36px; color: var(--doux); font-size: 15px; }
   .coordonnees a { text-decoration: none; border-bottom: 1px solid var(--trait); }
   .coordonnees a:hover { color: var(--accent); border-color: var(--accent); }
 
-  footer { border-top: 1px solid var(--trait); padding: 34px 0 40px; }
+  footer { border-top: 1px solid var(--trait); padding: 34px 0 0; overflow: hidden; }
   footer .page { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
   footer .logo svg { width: 26px; height: 26px; }
   footer .logo b { font-size: 14px; }
   footer .mentions { color: var(--pale); font-size: 13px; }
+  .marque-geante { display: flex; justify-content: center; font-family: var(--serif); font-weight: 300; font-size: clamp(90px, 23vw, 360px); line-height: .8; letter-spacing: -.04em; margin: 50px 0 0; color: transparent; -webkit-text-stroke: 1px rgba(232, 165, 92, .35); user-select: none; overflow: hidden; padding-bottom: .02em; }
+  .marque-geante span { display: inline-block; }
+
+  /* visionneuse */
+  .visionneuse { border: 0; padding: 0; background: transparent; max-width: none; max-height: none; width: 100vw; height: 100vh; margin: 0; }
+  .visionneuse::backdrop { background: rgba(8, 7, 6, .92); backdrop-filter: blur(8px); }
+  .visionneuse[open] { display: grid; place-items: center; }
+  .visionneuse video { max-height: 88vh; max-width: 92vw; border-radius: 18px; background: #000; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, .8); }
+  .visionneuse .fermer { position: fixed; top: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--trait); background: var(--carte); color: var(--texte); font-size: 26px; line-height: 1; cursor: pointer; }
+  .visionneuse .fermer:hover { border-color: var(--accent); color: var(--accent); }
 
   /* bouton WhatsApp flottant */
-  .wa-flottant { position: fixed; right: 20px; bottom: 20px; z-index: 70; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--vert); color: #06210f; box-shadow: 0 14px 34px -10px rgba(37, 211, 102, .6); transform: scale(0); transition: transform .35s cubic-bezier(.2, .8, .2, 1.2); }
+  .wa-flottant { position: fixed; right: 20px; bottom: 20px; z-index: 70; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--vert); color: #06210f; box-shadow: 0 14px 34px -10px rgba(37, 211, 102, .6); transform: scale(0); transition: transform .45s var(--sortie); }
   .wa-flottant.visible { transform: scale(1); }
   .wa-flottant svg { width: 28px; height: 28px; }
   .wa-flottant::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--vert); animation: onde 2.4s ease-out infinite; }
   @keyframes onde { from { transform: scale(1); opacity: .7; } to { transform: scale(1.6); opacity: 0; } }
-
-  /* apparitions au défilement */
-  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s cubic-bezier(.2, .8, .2, 1), transform .9s cubic-bezier(.2, .8, .2, 1); transition-delay: var(--d, 0s); }
-  .reveal.vu { opacity: 1; transform: none; }
 
   @media (max-width: 1020px) {
     .liens > a:not(.bouton) { display: none; }
@@ -271,49 +369,61 @@
     .objectif { grid-template-columns: 1fr; gap: 20px; }
   }
   @media (max-width: 860px) {
-    .heros { padding: 24px 0 72px; }
-    .heros .page { grid-template-columns: 1fr; gap: 48px; }
+    .heros { padding: 100px 0 80px; min-height: 0; }
+    .heros > .page { grid-template-columns: 1fr; gap: 44px; }
     .scene { order: -1; }
-    .telephone { width: min(240px, 64vw); transform: none; }
+    .telephone { width: min(230px, 60vw); transform: none; border-radius: 34px; }
+    .telephone video { border-radius: 26px; }
     .etiquette { left: 0; }
     .etiquette.deux { right: 0; }
     .prisme { width: 80px; height: 80px; right: 4px; }
-    section { padding: 80px 0; }
+    .defiler { display: none; }
+    section { padding: 90px 0; }
+    .manifeste { padding: 110px 0 80px; }
     .chiffres { grid-template-columns: 1fr 1fr; }
-    .projets { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; gap: 52px; }
     .formats { grid-template-columns: 1fr; }
-    .fondateur { grid-template-columns: 1fr; gap: 36px; }
+    .fondateur { grid-template-columns: 1fr; gap: 40px; }
     .portrait { max-width: 380px; aspect-ratio: 1 / 1; }
     .raisons { grid-template-columns: 1fr; }
     .livrables { grid-template-columns: 1fr; gap: 32px; }
+    .claire { border-radius: 26px 26px 0 0; }
+    .claire + .claire-suite { border-radius: 0 0 26px 26px; }
   }
   @media (max-width: 520px) {
+    .page { padding: 0 18px; }
+    .liens { gap: 10px; }
     .liens .bouton span { display: none; }
     .liens .bouton { padding: 10px 12px; }
-    .liens { gap: 10px; }
     .langues span { display: none; }
-    .liens .langues a { padding: 6px 8px; }
-    .metiers { grid-template-columns: 1fr; }
+    .langues a { padding: 6px 8px; }
     .chapo { font-size: 17px; }
     .objectif { padding: 22px; }
+    .metiers { grid-template-columns: 1fr; }
     .liste-livrables li { flex-direction: column; gap: 2px; }
     .liste-livrables li span { text-align: left; }
     .actions .bouton { flex: 1 1 100%; justify-content: center; }
     .etiquette { display: none; }
+    summary { font-size: 19px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-    h1 .mot > span, h1 em { transform: none; }
-    .reveal { opacity: 1; transform: none; }
+    h1 .mot > span, .entree { transform: none; opacity: 1; }
   }
 </style>
 </head>
 <body>
+<div class="rideau" aria-hidden="true">
+  <div class="rideau-centre">
+    <svg viewBox="0 0 48 48"><path d="M24 0 L0 48 H13 L24 24 Z" fill="#f1ece4" stroke="#f1ece4"/><path d="M24 0 L24 24 L35 48 H48 Z" fill="#e8a55c" stroke="#e8a55c"/></svg>
+    <b>ALACIO</b>
+  </div>
+</div>
+<div class="curseur" aria-hidden="true"><span class="point"></span><span class="anneau"><em>Lire</em></span></div>
 <div class="progression" aria-hidden="true"></div>
 
 <nav class="haut">
   <div class="page">
-    <a class="logo" href="#" aria-label="Alacio, agence de design">
+    <a class="logo" href="#haut" aria-label="Alacio, agence de design">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 0 L0 48 H13 L24 24 Z" fill="#f1ece4"/><path d="M24 0 L24 24 L35 48 H48 Z" fill="#e8a55c"/></svg>
       <span><b>ALACIO</b><small>Agence de design</small></span>
     </a>
@@ -334,36 +444,40 @@
   </div>
 </nav>
 
-<header class="heros">
-  <div class="halo" style="width:520px;height:520px;background:#e8a55c;right:-160px;top:-120px;"></div>
+<header class="heros" id="haut">
+  <canvas id="scene3d" aria-hidden="true"></canvas>
+  <div class="halo" style="width:560px;height:560px;background:#e8a55c;right:-180px;top:-140px;"></div>
   <div class="page">
     <div>
-      <p class="surtitre">Agence de design · Vidéo 3D</p>
+      <p class="surtitre entree" style="--d:.1s">Agence de design · Vidéo 3D</p>
       <h1>
         <span class="mot"><span style="animation-delay:.05s">Votre</span></span>
-        <span class="mot"><span style="animation-delay:.12s">produit</span></span>
-        <span class="mot"><span style="animation-delay:.19s">en</span></span>
-        <span class="mot"><span style="animation-delay:.26s">vidéo,</span></span>
-        <span class="mot"><span style="animation-delay:.36s"><em style="animation-delay:.36s, 1.4s">sans shooting.</em></span></span>
+        <span class="mot"><span style="animation-delay:.13s">produit</span></span>
+        <span class="mot"><span style="animation-delay:.21s">en</span></span>
+        <span class="mot"><span style="animation-delay:.29s">vidéo,</span></span>
+        <span class="mot"><span style="animation-delay:.4s"><em>sans</em></span></span>
+        <span class="mot"><span style="animation-delay:.48s"><em>shooting.</em></span></span>
       </h1>
-      <p class="chapo reveal" style="--d:.45s">Nous recréons vos produits et vos applications en 3D, puis nous en tirons des vidéos courtes pour les réseaux, votre site et vos publicités. Musique et bruitages compris, en 9:16 comme en 16:9.</p>
-      <div class="actions reveal" style="--d:.55s">
-        <a class="bouton wa" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener">
+      <p class="chapo entree" style="--d:.6s">Nous recréons vos produits et vos applications en 3D, puis nous en tirons des vidéos courtes pour les réseaux, votre site et vos publicités. Musique et bruitages compris, en 9:16 comme en 16:9.</p>
+      <div class="actions entree" style="--d:.72s">
+        <a class="bouton wa magnetique" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
           Parler de votre projet
         </a>
-        <a class="bouton vide" href="#realisations">Voir les réalisations</a>
+        <a class="bouton vide magnetique" href="#realisations">Voir les réalisations</a>
       </div>
-      <ul class="garanties reveal" style="--d:.65s">
+      <ul class="garanties entree" style="--d:.84s">
         <li>Trois directions visuelles proposées</li>
         <li>Vous validez chaque étape</li>
         <li>Son composé pour chaque vidéo</li>
       </ul>
     </div>
 
-    <div class="scene">
-      <div class="telephone" id="telephone">
-        <video src="apercu.mp4" poster="apercu.jpg" autoplay muted loop playsinline preload="auto" aria-label="Extraits de nos vidéos : SOLÈNE, Mona et Soldo"></video>
+    <div class="scene entree" style="--d:.3s">
+      <div class="flotte">
+        <div class="telephone" id="telephone">
+          <video src="apercu.mp4" poster="apercu.jpg" autoplay muted loop playsinline preload="auto" aria-label="Extraits de nos vidéos : SOLÈNE, Mona et Soldo"></video>
+        </div>
       </div>
       <div class="etiquette"><b>Pub produit 3D</b>9:16 · 20 s · 60 i/s</div>
       <div class="etiquette deux"><b>Démo d'appli</b>9:16 et 16:9</div>
@@ -372,6 +486,7 @@
       </div>
     </div>
   </div>
+  <div class="defiler entree" style="--d:1.2s" aria-hidden="true">Défiler<i></i></div>
 </header>
 
 <div class="bandeau" aria-hidden="true">
@@ -383,85 +498,116 @@
 
 <main>
 
-  <section id="realisations">
+  <section class="manifeste">
     <div class="page">
-      <div class="entete reveal">
-        <p class="surtitre">Réalisations</p>
-        <h2>Trois vidéos, <em>trois façons</em> de montrer un produit.</h2>
-        <p>Une pub produit, une démo d'application en 3D, un lancement de logiciel. Chacune dure 20 secondes, et chaque image a été calculée pour elle.</p>
+      <p id="manifeste">Une marque qui vend sur les réseaux a besoin de nouvelles vidéos <em>chaque mois.</em> Un shooting par vidéo, ça ne suit pas.</p>
+      <div class="signe">Romain, fondateur d'Alacio</div>
+    </div>
+  </section>
+
+  <section id="realisations" class="realisations">
+    <div class="page">
+      <div class="entete">
+        <p class="surtitre" data-monte>Réalisations</p>
+        <h2 data-titre>Trois vidéos, <em>trois façons</em> de montrer un produit.</h2>
+        <p data-monte>Une pub produit, une démo d'application en 3D, un lancement de logiciel. Chacune dure 20 secondes, et chaque image a été calculée pour elle.</p>
       </div>
 
-      <div class="chiffres reveal">
+      <div class="chiffres" data-monte>
         <div><b data-compte="1200">1 200</b><span>images calculées pour 20 secondes</span></div>
         <div><b data-compte="60">60</b><span>images par seconde, pour un mouvement fluide</span></div>
         <div><b data-compte="100" data-suffixe=" %">100 %</b><span>de la musique et des bruitages composés</span></div>
         <div><b data-compte="3">3</b><span>directions visuelles avant de commencer</span></div>
       </div>
+    </div>
 
-      <div class="projets" style="margin-top:56px">
-        <figure class="projet reveal">
-          <div class="ecran"><video src="solene.mp4" poster="images/solene.jpg" controls playsinline preload="none"></video></div>
-          <span class="type">Pub produit 3D · 20 s · 9:16</span>
-          <h3>SOLÈNE · Sérum Éclat</h3>
-          <p>Le flacon ambré, la goutte qui tombe, la lumière de fin d'après-midi. Tout est recréé en 3D, puis déclinable en autant d'angles et de formats qu'il en faut.</p>
-        </figure>
-        <figure class="projet reveal" style="--d:.1s">
-          <div class="ecran"><video src="soldo.mp4" poster="images/soldo.jpg" controls playsinline preload="none"></video></div>
-          <span class="type">Lancement · 20 s · 9:16 et 16:9</span>
-          <h3>Soldo · Facturation</h3>
-          <p>Le lancement d'un outil qui relance les clients à la place des artisans. On suit une facture, de l'envoi jusqu'au mois entièrement payé.</p>
-        </figure>
-        <figure class="projet reveal" style="--d:.2s">
-          <div class="ecran"><video src="mona.mp4" poster="images/mona.jpg" controls playsinline preload="none"></video></div>
-          <span class="type">Démo d'application 3D · 20 s · 9:16</span>
-          <h3>Mona · Appli de budget</h3>
-          <p>L'écran sort du téléphone : chaque épargne monte d'une marche jusqu'à l'objectif atteint, puis se partage avec un proche.</p>
-        </figure>
+    <div class="horizontal" id="horizontal">
+      <div class="piste-h" id="piste-h">
+        <article class="panneau">
+          <div class="ecran" data-film="solene.mp4" data-titre-film="SOLÈNE · Sérum Éclat">
+            <video src="solene.mp4" poster="images/solene.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
+            <button class="lire" type="button"><i></i>Voir avec le son</button>
+          </div>
+          <div>
+            <span class="numero" aria-hidden="true">01</span>
+            <span class="type">Pub produit 3D · 20 s · 9:16</span>
+            <h3>SOLÈNE · Sérum Éclat</h3>
+            <p>Le flacon ambré, la goutte qui tombe, la lumière de fin d'après-midi. Tout est recréé en 3D, puis déclinable en autant d'angles et de formats qu'il en faut.</p>
+          </div>
+        </article>
+        <article class="panneau">
+          <div class="ecran" data-film="soldo.mp4" data-titre-film="Soldo · Facturation">
+            <video src="soldo.mp4" poster="images/soldo.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
+            <button class="lire" type="button"><i></i>Voir avec le son</button>
+          </div>
+          <div>
+            <span class="numero" aria-hidden="true">02</span>
+            <span class="type">Lancement · 20 s · 9:16 et 16:9</span>
+            <h3>Soldo · Facturation</h3>
+            <p>Le lancement d'un outil qui relance les clients à la place des artisans. On suit une facture, de l'envoi jusqu'au mois entièrement payé.</p>
+          </div>
+        </article>
+        <article class="panneau">
+          <div class="ecran" data-film="mona.mp4" data-titre-film="Mona · Appli de budget">
+            <video src="mona.mp4" poster="images/mona.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
+            <button class="lire" type="button"><i></i>Voir avec le son</button>
+          </div>
+          <div>
+            <span class="numero" aria-hidden="true">03</span>
+            <span class="type">Démo d'application 3D · 20 s · 9:16</span>
+            <h3>Mona · Appli de budget</h3>
+            <p>L'écran sort du téléphone : chaque épargne monte d'une marche jusqu'à l'objectif atteint, puis se partage avec un proche.</p>
+          </div>
+        </article>
       </div>
-      <p class="fictif reveal">SOLÈNE, Soldo et Mona sont des marques fictives, créées par Alacio pour montrer son travail. Pour votre vidéo, nous partons de votre produit, de vos écrans et de vos vrais chiffres.</p>
+      <div class="compteur-h" aria-hidden="true"><span id="numero-h">01</span><span class="jauge"><i id="jauge-h"></i></span><span>03</span></div>
+    </div>
+
+    <div class="page">
+      <p class="fictif" data-monte>SOLÈNE, Soldo et Mona sont des marques fictives, créées par Alacio pour montrer son travail. Pour votre vidéo, nous partons de votre produit, de vos écrans et de vos vrais chiffres.</p>
     </div>
   </section>
 
-  <section id="videos" style="background:var(--fond-2);border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)">
+  <section id="videos">
     <div class="page">
-      <div class="entete reveal">
-        <p class="surtitre">Nos vidéos</p>
-        <h2>Ce qu'une vidéo peut faire <em>pour vous.</em></h2>
-        <p>Chaque format répond à un objectif précis. Dites-nous le vôtre : nous vous proposons celui qui y répond le mieux, ou nous en construisons un sur mesure.</p>
+      <div class="entete">
+        <p class="surtitre" data-monte>Nos vidéos</p>
+        <h2 data-titre>Ce qu'une vidéo peut faire <em>pour vous.</em></h2>
+        <p data-monte>Chaque format répond à un objectif précis. Dites-nous le vôtre : nous vous proposons celui qui y répond le mieux, ou nous en construisons un sur mesure.</p>
       </div>
 
       <div class="objectifs">
-        <article class="objectif reveal">
+        <article class="objectif" data-monte>
           <div>
             <span class="num">01</span>
             <h3>Vendre un produit</h3>
             <p>Faire désirer un objet, un cosmétique, une boisson, avant même qu'on l'ait en main.</p>
           </div>
-          <div class="formats">
+          <div class="formats" data-cascade>
             <div class="format"><strong>Pub produit 3D <a class="pastille" href="#realisations">Exemple</a></strong><span>Votre produit recréé en 3D d'après vos photos et ses dimensions : matière, texture, lumière. Avec votre prix et votre offre exacts.</span></div>
             <div class="format"><strong>Vitrine en studio 3D</strong><span>Vos produits ou vos réalisations exposés dans un studio 3D : écrans, socles, lumière. À partir de 4 à 8 images ou vidéos.</span></div>
           </div>
         </article>
 
-        <article class="objectif reveal">
+        <article class="objectif" data-monte>
           <div>
             <span class="num">02</span>
             <h3>Arrêter le défilement</h3>
             <p>Gagner les trois premières secondes, celles où l'on décide de regarder ou de passer.</p>
           </div>
-          <div class="formats">
+          <div class="formats" data-cascade>
             <div class="format"><strong>Accroches publicitaires</strong><span>Trois débuts de pub différents, à tester en tête de vos vidéos actuelles. Chacun se raccorde à leur première image.</span></div>
             <div class="format"><strong>Pub en boucle</strong><span>Une vidéo verticale dont la fin rejoint le début, sans couture : on la regarde deux fois sans s'en rendre compte.</span></div>
           </div>
         </article>
 
-        <article class="objectif reveal">
+        <article class="objectif" data-monte>
           <div>
             <span class="num">03</span>
             <h3>Montrer une application</h3>
             <p>Faire comprendre en vingt secondes ce que fait votre logiciel, votre appli ou votre site.</p>
           </div>
-          <div class="formats">
+          <div class="formats" data-cascade>
             <div class="format"><strong>Démo d'application 3D <a class="pastille" href="#realisations">Exemple</a></strong><span>Vos écrans sortent du téléphone et prennent du relief. Pour l'App Store, les réseaux et votre site.</span></div>
             <div class="format"><strong>Démo d'application</strong><span>Votre interface animée, de l'action au résultat, avec vos vraies données. Mobile, web ou logiciel.</span></div>
             <div class="format"><strong>Lancement de produit <a class="pastille" href="#realisations">Exemple</a></strong><span>Une nouveauté, une fonctionnalité, une offre : on suit une personne, de ce qui l'encombre à ce qui la soulage.</span></div>
@@ -469,25 +615,25 @@
           </div>
         </article>
 
-        <article class="objectif reveal">
+        <article class="objectif" data-monte>
           <div>
             <span class="num">04</span>
             <h3>Rassurer avant l'achat</h3>
             <p>Lever le doute : est-ce que ça marche, et comment ça se passe après la commande ?</p>
           </div>
-          <div class="formats">
+          <div class="formats" data-cascade>
             <div class="format"><strong>Preuve par les chiffres</strong><span>Vos résultats avant et après, avec leur source, et la phrase d'un client qui a donné son accord.</span></div>
             <div class="format"><strong>Trajet de A à B en 3D</strong><span>Le parcours d'une commande, de l'atelier jusque chez votre client, en un seul plan continu.</span></div>
           </div>
         </article>
 
-        <article class="objectif reveal">
+        <article class="objectif" data-monte>
           <div>
             <span class="num">05</span>
             <h3>Raconter, faire réagir</h3>
             <p>Donner un visage à la marque et faire parler votre communauté.</p>
           </div>
-          <div class="formats">
+          <div class="formats" data-cascade>
             <div class="format"><strong>Dialogue entre personnages 3D</strong><span>Deux personnages, des voix, une histoire : l'origine de votre marque ou ce que votre produit change.</span></div>
             <div class="format"><strong>Court-métrage animé</strong><span>Une petite histoire sans paroles, portée par l'image et les bruitages, pour marquer les esprits.</span></div>
             <div class="format"><strong>La vidéo qui fait commenter</strong><span>Une vidéo qui invite à répondre en commentaire, avec une règle du jeu simple qui donne envie de participer.</span></div>
@@ -496,7 +642,7 @@
         </article>
       </div>
 
-      <div class="diffusion reveal">
+      <div class="diffusion" data-cascade>
         <span>Reels</span><span>TikTok</span><span>YouTube Shorts</span><span>Pubs Meta</span><span>Pages produit</span><span>App Store et Google Play</span><span>Site et landing page</span><span>Emailing</span><span>Écrans en boutique et salons</span>
       </div>
     </div>
@@ -504,55 +650,54 @@
 
   <section id="methode">
     <div class="page">
-      <div class="entete centre reveal">
-        <p class="surtitre">Méthode</p>
-        <h2>Cinq étapes, <em>et rien sans votre accord.</em></h2>
-        <p>Vous voyez la vidéo prendre forme et vous la validez à chaque étape. Le rendu final ne part qu'une fois que tout vous convient.</p>
+      <div class="entete centre">
+        <p class="surtitre" data-monte>Méthode</p>
+        <h2 data-titre>Cinq étapes, <em>et rien sans votre accord.</em></h2>
+        <p data-monte>Vous voyez la vidéo prendre forme et vous la validez à chaque étape. Le rendu final ne part qu'une fois que tout vous convient.</p>
       </div>
       <div class="etapes" id="etapes">
         <div class="fil" aria-hidden="true"></div>
-        <div class="etape reveal"><div class="rond">1</div><div><h3>On échange quinze minutes</h3><p>Votre produit, votre public, l'endroit où la vidéo sera diffusée et ce qu'on doit en retenir. Vous nous envoyez vos photos ou vos captures, votre logo et vos couleurs.</p></div></div>
-        <div class="etape reveal"><div class="rond">2</div><div><h3>Trois directions visuelles</h3><p>Trois ambiances différentes (lumière, décor, rythme), chacune avec une image d'essai. Vous en choisissez une, ou vous mélangez.</p><span class="valide">Vous validez la direction</span></div></div>
-        <div class="etape reveal"><div class="rond">3</div><div><h3>Script et storyboard</h3><p>Le déroulé plan par plan, seconde par seconde, avec une image par plan. Vous savez exactement ce que vous allez voir.</p><span class="valide">Vous validez le storyboard</span></div></div>
-        <div class="etape reveal"><div class="rond">4</div><div><h3>Son et aperçu</h3><p>La musique et les bruitages sont composés sur le rythme des images. Vous recevez un aperçu complet, avec le son, à commenter.</p><span class="valide">Vous validez l'aperçu</span></div></div>
-        <div class="etape reveal"><div class="rond">5</div><div><h3>Rendu final et déclinaisons</h3><p>La vidéo en pleine définition, sa version web, sa miniature et les formats dont vous avez besoin. Puis les variantes : autre angle, autre saison, autre offre.</p></div></div>
+        <div class="etape" data-monte><div class="rond">1</div><div><h3>On échange quinze minutes</h3><p>Votre produit, votre public, l'endroit où la vidéo sera diffusée et ce qu'on doit en retenir. Vous nous envoyez vos photos ou vos captures, votre logo et vos couleurs.</p></div></div>
+        <div class="etape" data-monte><div class="rond">2</div><div><h3>Trois directions visuelles</h3><p>Trois ambiances différentes (lumière, décor, rythme), chacune avec une image d'essai. Vous en choisissez une, ou vous mélangez.</p><span class="valide">Vous validez la direction</span></div></div>
+        <div class="etape" data-monte><div class="rond">3</div><div><h3>Script et storyboard</h3><p>Le déroulé plan par plan, seconde par seconde, avec une image par plan. Vous savez exactement ce que vous allez voir.</p><span class="valide">Vous validez le storyboard</span></div></div>
+        <div class="etape" data-monte><div class="rond">4</div><div><h3>Son et aperçu</h3><p>La musique et les bruitages sont composés sur le rythme des images. Vous recevez un aperçu complet, avec le son, à commenter.</p><span class="valide">Vous validez l'aperçu</span></div></div>
+        <div class="etape" data-monte><div class="rond">5</div><div><h3>Rendu final et déclinaisons</h3><p>La vidéo en pleine définition, sa version web, sa miniature et les formats dont vous avez besoin. Puis les variantes : autre angle, autre saison, autre offre.</p></div></div>
       </div>
     </div>
   </section>
 
   <section id="equipe" style="padding-top:40px">
     <div class="page">
-      <div class="entete reveal">
-        <p class="surtitre">Derrière chaque vidéo</p>
-        <h2>Cinq métiers <em>pour vingt secondes.</em></h2>
-        <p>Une vidéo réussie ne tient pas qu'à une belle image. Chez Alacio, chaque projet passe par ces cinq étapes de fabrication, du premier croquis au dernier contrôle.</p>
+      <div class="entete">
+        <p class="surtitre" data-monte>Derrière chaque vidéo</p>
+        <h2 data-titre>Cinq métiers <em>pour vingt secondes.</em></h2>
+        <p data-monte>Une vidéo réussie ne tient pas qu'à une belle image. Chez Alacio, chaque projet passe par ces cinq étapes de fabrication, du premier croquis au dernier contrôle.</p>
       </div>
-      <div class="metiers">
-        <div class="metier reveal"><div class="icone"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><h3>Direction artistique</h3><p>L'ambiance, la lumière, le rythme et le message à retenir.</p></div>
-        <div class="metier reveal" style="--d:.06s"><div class="icone"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 11l8-4.5M12 11v9M12 11L4 6.5"/></svg></div><h3>3D et lumière</h3><p>Le produit recréé à ses vraies dimensions, ses matières, ses reflets.</p></div>
-        <div class="metier reveal" style="--d:.12s"><div class="icone"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/></svg></div><h3>Animation</h3><p>Chaque mouvement et chaque coupe calés sur le temps de la musique.</p></div>
-        <div class="metier reveal" style="--d:.18s"><div class="icone"><svg viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg></div><h3>Son</h3><p>Musique et bruitages composés pour la vidéo, mixés aux niveaux des plateformes.</p></div>
-        <div class="metier reveal" style="--d:.24s"><div class="icone"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/></svg></div><h3>Contrôle</h3><p>Image par image : coupes, textes, zones réservées des réseaux, volume sonore.</p></div>
+      <div class="metiers" data-cascade>
+        <div class="metier"><div class="icone"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><h3>Direction artistique</h3><p>L'ambiance, la lumière, le rythme et le message à retenir.</p></div>
+        <div class="metier"><div class="icone"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 11l8-4.5M12 11v9M12 11L4 6.5"/></svg></div><h3>3D et lumière</h3><p>Le produit recréé à ses vraies dimensions, ses matières, ses reflets.</p></div>
+        <div class="metier"><div class="icone"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/></svg></div><h3>Animation</h3><p>Chaque mouvement et chaque coupe calés sur le temps de la musique.</p></div>
+        <div class="metier"><div class="icone"><svg viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg></div><h3>Son</h3><p>Musique et bruitages composés pour la vidéo, mixés aux niveaux des plateformes.</p></div>
+        <div class="metier"><div class="icone"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/></svg></div><h3>Contrôle</h3><p>Image par image : coupes, textes, zones réservées des réseaux, volume sonore.</p></div>
       </div>
     </div>
   </section>
 
   <section id="fondateur">
     <div class="page fondateur">
-      <div class="portrait reveal">
+      <div class="portrait" data-monte>
         <div class="lumiere" aria-hidden="true"></div>
         <span class="initiale" aria-hidden="true">R</span>
         <div class="signature"><b>Romain</b><span>Fondateur d'Alacio</span></div>
       </div>
       <div>
-        <p class="surtitre reveal">Le fondateur</p>
-        <h2 class="reveal">Pourquoi <em>Alacio</em> existe.</h2>
-        <p class="citation reveal">Une marque qui vend sur les réseaux a besoin de nouvelles vidéos chaque mois. Un shooting par vidéo, ça ne suit pas.</p>
-        <p class="texte reveal">J'ai créé Alacio pour les marques et les applications qui ont un bon produit mais pas le budget, ni le temps, d'organiser un tournage à chaque nouvelle publicité. Recréer le produit en 3D change tout : une fois qu'il existe, on peut le filmer sous tous les angles, dans toutes les lumières, autant de fois qu'il le faut.</p>
-        <p class="texte reveal">Je tiens à deux choses. D'abord, que chaque vidéo soit fabriquée pour vous : pas de modèle tout fait, pas de musique de banque de sons. Ensuite, qu'il n'y ait rien d'inventé : vos prix, vos offres et vos chiffres sont les vrais, sinon ils n'apparaissent pas.</p>
-        <p class="texte reveal">Je suis votre interlocuteur du premier message à la livraison. Écrivez-moi directement sur WhatsApp : c'est moi qui vous réponds.</p>
-        <div class="actions reveal" style="margin-top:28px">
-          <a class="bouton wa" href="https://wa.me/33756866590?text=Bonjour%20Romain%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o." target="_blank" rel="noopener">
+        <p class="surtitre" data-monte>Le fondateur</p>
+        <h2 data-titre>Pourquoi <em>Alacio</em> existe.</h2>
+        <p class="texte" data-monte>J'ai créé Alacio pour les marques et les applications qui ont un bon produit mais pas le budget, ni le temps, d'organiser un tournage à chaque nouvelle publicité. Recréer le produit en 3D change tout : une fois qu'il existe, on peut le filmer sous tous les angles, dans toutes les lumières, autant de fois qu'il le faut.</p>
+        <p class="texte" data-monte>Je tiens à deux choses. D'abord, que chaque vidéo soit fabriquée pour vous : pas de modèle tout fait, pas de musique de banque de sons. Ensuite, qu'il n'y ait rien d'inventé : vos prix, vos offres et vos chiffres sont les vrais, sinon ils n'apparaissent pas.</p>
+        <p class="texte" data-monte>Je suis votre interlocuteur du premier message à la livraison. Écrivez-moi directement sur WhatsApp : c'est moi qui vous réponds.</p>
+        <div class="actions" data-monte style="margin-top:30px">
+          <a class="bouton wa magnetique" href="https://wa.me/33756866590?text=Bonjour%20Romain%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o." target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
             Écrire à Romain
           </a>
@@ -561,13 +706,13 @@
     </div>
   </section>
 
-  <section id="pourquoi" style="padding-top:40px">
+  <section id="pourquoi" class="claire">
     <div class="page">
-      <div class="entete reveal">
-        <p class="surtitre">Pourquoi nous</p>
-        <h2>Ce qui change <em>avec Alacio.</em></h2>
+      <div class="entete">
+        <p class="surtitre" data-monte>Pourquoi nous</p>
+        <h2 data-titre>Ce qui change <em>avec Alacio.</em></h2>
       </div>
-      <div class="raisons reveal">
+      <div class="raisons" data-cascade>
         <div class="raison"><span class="num">i.</span><h3>Pas de shooting</h3><p>Deux ou trois photos de votre produit et ses dimensions suffisent. Rien à expédier, pas de studio à louer, pas de journée de tournage.</p></div>
         <div class="raison"><span class="num">ii.</span><h3>Déclinable à volonté</h3><p>Votre produit existe en 3D : un nouvel angle, une nouvelle saison ou une nouvelle offre, sans tout refaire.</p></div>
         <div class="raison"><span class="num">iii.</span><h3>Un son à vous</h3><p>Musique et bruitages composés pour chaque vidéo, au rythme des images, et mixés au niveau sonore des plateformes.</p></div>
@@ -578,14 +723,14 @@
     </div>
   </section>
 
-  <section id="livrables" style="padding-top:40px">
+  <section id="livrables" class="claire-suite" style="padding-top:40px">
     <div class="page livrables">
-      <div class="entete reveal" style="margin:0">
-        <p class="surtitre">Ce que vous recevez</p>
-        <h2>Prêt à publier, <em>partout.</em></h2>
-        <p>Chaque vidéo est livrée avec tout ce qu'il faut pour la diffuser tout de suite, sur chaque plateforme.</p>
+      <div class="entete" style="margin:0">
+        <p class="surtitre" data-monte>Ce que vous recevez</p>
+        <h2 data-titre>Prêt à publier, <em>partout.</em></h2>
+        <p data-monte>Chaque vidéo est livrée avec tout ce qu'il faut pour la diffuser tout de suite, sur chaque plateforme.</p>
       </div>
-      <ul class="liste-livrables reveal">
+      <ul class="liste-livrables" data-cascade>
         <li><b>La vidéo en pleine définition</b><span>1080 × 1920 ou 1920 × 1080, 60 images par seconde</span></li>
         <li><b>Une version web plus légère</b><span>pour votre site et l'emailing</span></li>
         <li><b>Les autres formats</b><span>9:16, 16:9 ou 1:1, selon vos besoins</span></li>
@@ -596,37 +741,37 @@
     </div>
   </section>
 
-  <section id="questions" style="padding-top:40px">
+  <section id="questions">
     <div class="page">
-      <div class="entete centre reveal">
-        <p class="surtitre">Questions</p>
-        <h2>Ce qu'on nous <em>demande souvent.</em></h2>
+      <div class="entete centre">
+        <p class="surtitre" data-monte>Questions</p>
+        <h2 data-titre>Ce qu'on nous <em>demande souvent.</em></h2>
       </div>
-      <div class="questions reveal">
-        <details><summary>Faut-il vous envoyer le produit ?</summary><p>Non. Deux ou trois photos sous différents angles (dont une de face), ses dimensions, et si possible les fichiers de l'étiquette ou de l'emballage suffisent à le recréer en 3D.</p></details>
-        <details><summary>Et pour une application ou un logiciel ?</summary><p>Une capture de chaque écran important, avant et après les actions à montrer, votre logo en SVG et vos couleurs. Nous redessinons les écrans pour qu'ils restent nets à toutes les tailles.</p></details>
-        <details><summary>Peut-on avoir une voix off ?</summary><p>Oui. Nos vidéos fonctionnent sans voix, pour être comprises même sans le son, mais nous pouvons ajouter une voix off ou des personnages qui parlent, en français ou dans une autre langue.</p></details>
-        <details><summary>Combien de temps faut-il ?</summary><p>Cela dépend du format et du nombre de déclinaisons. Le délai dépend surtout du temps de validation de chaque étape : nous vous donnons un calendrier précis dès le premier échange.</p></details>
-        <details><summary>Combien ça coûte ?</summary><p>Le prix dépend du format, de la durée et du nombre de versions. Décrivez-nous votre projet en deux lignes sur WhatsApp ou par email : nous vous répondons avec une idée de vidéo et un devis.</p></details>
-        <details><summary>SOLÈNE, Soldo et Mona sont-ils des clients ?</summary><p>Non, ce sont des marques fictives que nous avons créées pour montrer ce que nous savons faire. Pour votre vidéo, tout part de votre vrai produit.</p></details>
+      <div class="questions" data-cascade>
+        <details><summary>Faut-il vous envoyer le produit ?</summary><div class="reponse"><p>Non. Deux ou trois photos sous différents angles (dont une de face), ses dimensions, et si possible les fichiers de l'étiquette ou de l'emballage suffisent à le recréer en 3D.</p></div></details>
+        <details><summary>Et pour une application ou un logiciel ?</summary><div class="reponse"><p>Une capture de chaque écran important, avant et après les actions à montrer, votre logo en SVG et vos couleurs. Nous redessinons les écrans pour qu'ils restent nets à toutes les tailles.</p></div></details>
+        <details><summary>Peut-on avoir une voix off ?</summary><div class="reponse"><p>Oui. Nos vidéos fonctionnent sans voix, pour être comprises même sans le son, mais nous pouvons ajouter une voix off ou des personnages qui parlent, en français ou dans une autre langue.</p></div></details>
+        <details><summary>Combien de temps faut-il ?</summary><div class="reponse"><p>Cela dépend du format et du nombre de déclinaisons. Le délai dépend surtout du temps de validation de chaque étape : nous vous donnons un calendrier précis dès le premier échange.</p></div></details>
+        <details><summary>Combien ça coûte ?</summary><div class="reponse"><p>Le prix dépend du format, de la durée et du nombre de versions. Décrivez-nous votre projet en deux lignes sur WhatsApp ou par email : nous vous répondons avec une idée de vidéo et un devis.</p></div></details>
+        <details><summary>SOLÈNE, Soldo et Mona sont-ils des clients ?</summary><div class="reponse"><p>Non, ce sont des marques fictives que nous avons créées pour montrer ce que nous savons faire. Pour votre vidéo, tout part de votre vrai produit.</p></div></details>
       </div>
     </div>
   </section>
 
   <section class="final" id="contact">
-    <div class="halo" style="width:620px;height:620px;background:#e8a55c;left:50%;top:40%;margin-left:-310px;opacity:.18"></div>
+    <div class="halo" style="width:680px;height:680px;background:#e8a55c;left:50%;top:40%;margin-left:-340px;opacity:.17"></div>
     <div class="page" style="position:relative">
-      <p class="surtitre reveal" style="justify-content:center">Contact</p>
-      <h2 class="reveal">Un produit à mettre <em>en vidéo ?</em></h2>
-      <p class="reveal">Envoyez-nous en deux lignes ce que vous vendez et où vous voulez le montrer. Nous vous répondons avec une première idée de vidéo.</p>
-      <div class="actions reveal">
-        <a class="bouton wa" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener">
+      <p class="surtitre" data-monte style="justify-content:center">Contact</p>
+      <h2 data-titre>Un produit à mettre <em>en vidéo ?</em></h2>
+      <p data-monte>Envoyez-nous en deux lignes ce que vous vendez et où vous voulez le montrer. Nous vous répondons avec une première idée de vidéo.</p>
+      <div class="actions" data-monte>
+        <a class="bouton wa magnetique" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
           Discuter sur WhatsApp
         </a>
-        <a class="bouton plein" href="mailto:contact@alacio.fr?subject=Projet%20vid%C3%A9o">Écrire un email</a>
+        <a class="bouton plein magnetique" href="mailto:contact@alacio.fr?subject=Projet%20vid%C3%A9o">Écrire un email</a>
       </div>
-      <div class="coordonnees reveal">
+      <div class="coordonnees" data-monte>
         <span>WhatsApp : <a href="https://wa.me/33756866590" target="_blank" rel="noopener">+33 7 56 86 65 90</a></span>
         <span>Email : <a href="mailto:contact@alacio.fr">contact@alacio.fr</a></span>
       </div>
@@ -637,72 +782,119 @@
 
 <footer>
   <div class="page">
-    <a class="logo" href="#" aria-label="Alacio, agence de design">
+    <a class="logo" href="#haut" aria-label="Alacio, agence de design">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 0 L0 48 H13 L24 24 Z" fill="#f1ece4"/><path d="M24 0 L24 24 L35 48 H48 Z" fill="#e8a55c"/></svg>
       <span><b>ALACIO</b><small>Agence de design</small></span>
     </a>
     <span class="mentions">© 2026 Alacio · <a href="https://alacio.fr">alacio.fr</a> · Les marques présentées sont fictives.</span>
   </div>
+  <div class="marque-geante" aria-hidden="true"><span>A</span><span>L</span><span>A</span><span>C</span><span>I</span><span>O</span></div>
 </footer>
+
+<dialog class="visionneuse" id="visionneuse" aria-label="Lecteur vidéo">
+  <button class="fermer" type="button" aria-label="Fermer la vidéo">×</button>
+  <video controls playsinline></video>
+</dialog>
 
 <a class="wa-flottant" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener" aria-label="Nous écrire sur WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
 </a>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script>
+(() => {
+  const html = document.documentElement;
   const calme = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const souris = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const large = () => innerWidth > 1020;
+  const avecGsap = !!(window.gsap && window.ScrollTrigger);
 
-  // apparitions au défilement
-  const vus = new IntersectionObserver((entrees) => entrees.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.add("vu"); vus.unobserve(e.target); }
-  }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
-  document.querySelectorAll(".reveal").forEach((el) => vus.observe(el));
+  // ---------- rideau d'ouverture ----------
+  const ouvrir = () => {
+    if (!html.classList.contains("attente")) return;
+    html.classList.add("sortie");
+    html.classList.remove("attente");
+    setTimeout(() => html.classList.remove("sortie"), 1100);
+  };
+  const tempsMin = new Promise((r) => setTimeout(r, 1050));
+  const polices = document.fonts ? Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1800))]) : Promise.resolve();
+  Promise.all([tempsMin, polices]).then(ouvrir);
 
-  // compteurs
+  // ---------- découpe des titres en mots ----------
+  const decoupe = (el) => {
+    [...el.childNodes].forEach((n) => {
+      if (n.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach((m) => {
+          if (!m) return;
+          if (/^\s+$/.test(m)) { frag.appendChild(document.createTextNode(" ")); return; }
+          const o = document.createElement("span"); o.className = "mot";
+          const i = document.createElement("span"); i.textContent = m;
+          o.appendChild(i); frag.appendChild(o);
+        });
+        n.replaceWith(frag);
+      } else if (n.nodeType === 1) decoupe(n);
+    });
+  };
+
+  // ---------- compteurs ----------
   const espace = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  const compteurs = new IntersectionObserver((entrees) => entrees.forEach((e) => {
-    if (!e.isIntersecting) return;
-    compteurs.unobserve(e.target);
-    const el = e.target, fin = +el.dataset.compte, suffixe = el.dataset.suffixe || "";
-    if (calme) { el.textContent = espace(fin) + suffixe; return; }
-    const t0 = performance.now(), duree = 1400;
-    const pas = (t) => {
-      const p = Math.min(1, (t - t0) / duree), v = Math.round(fin * (1 - Math.pow(1 - p, 3)));
-      el.textContent = espace(v) + suffixe;
-      if (p < 1) requestAnimationFrame(pas);
-    };
-    requestAnimationFrame(pas);
-  }), { threshold: 0.6 });
-  document.querySelectorAll("[data-compte]").forEach((el) => compteurs.observe(el));
+  const compte = (el) => {
+    const fin = +el.dataset.compte, suffixe = el.dataset.suffixe || "";
+    if (calme || !avecGsap) { el.textContent = espace(fin) + suffixe; return; }
+    const o = { v: 0 };
+    gsap.to(o, { v: fin, duration: 1.8, ease: "power3.out", onUpdate: () => { el.textContent = espace(Math.round(o.v)) + suffixe; } });
+  };
 
-  // navigation, barre de progression, fil de la méthode, bouton WhatsApp
+  // ---------- visionneuse ----------
+  const dialog = document.getElementById("visionneuse"), lecteur = dialog.querySelector("video");
+  let lenis = null;
+  const ouvrirFilm = (ecran) => {
+    const petit = ecran.querySelector("video");
+    lecteur.src = ecran.dataset.film; lecteur.poster = petit.getAttribute("poster");
+    dialog.setAttribute("aria-label", ecran.dataset.titreFilm);
+    if (dialog.showModal) dialog.showModal(); else dialog.setAttribute("open", "");
+    lenis && lenis.stop();
+    lecteur.muted = false; lecteur.currentTime = 0;
+    lecteur.play().catch(() => {});
+  };
+  const fermerFilm = () => { if (dialog.open) dialog.close(); };
+  dialog.addEventListener("close", () => { lecteur.pause(); lecteur.removeAttribute("src"); lecteur.load(); lenis && lenis.start(); });
+  dialog.querySelector(".fermer").addEventListener("click", fermerFilm);
+  dialog.addEventListener("click", (e) => { if (e.target === dialog) fermerFilm(); });
+  document.querySelectorAll(".panneau .ecran").forEach((ecran) => ecran.addEventListener("click", () => ouvrirFilm(ecran)));
+
+  // aperçus muets des réalisations : ils jouent quand ils sont à l'écran (ordinateur seulement)
+  if (souris && !calme) {
+    const vus = new IntersectionObserver((es) => es.forEach((e) => {
+      const v = e.target.querySelector("video");
+      if (e.isIntersecting) { v.preload = "auto"; v.play().catch(() => {}); } else v.pause();
+    }), { threshold: 0.55 });
+    document.querySelectorAll(".panneau .ecran").forEach((el) => vus.observe(el));
+  }
+
+  // ---------- navigation, barre, bouton WhatsApp ----------
   const nav = document.querySelector("nav.haut"), barre = document.querySelector(".progression");
-  const etapes = document.getElementById("etapes"), fil = etapes.querySelector(".fil"), lesEtapes = [...etapes.querySelectorAll(".etape")];
   const wa = document.querySelector(".wa-flottant"), heros = document.querySelector(".heros");
-  const auDefilement = () => {
-    const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
+  let dernierY = 0;
+  const auDefilement = (y) => {
+    const h = document.documentElement.scrollHeight - innerHeight;
     nav.classList.toggle("pleine", y > 10);
+    nav.classList.toggle("masquee", y > 400 && y > dernierY + 2);
+    if (y < dernierY - 2) nav.classList.remove("masquee");
+    dernierY = y;
     barre.style.transform = `scaleX(${h > 0 ? y / h : 0})`;
     wa.classList.toggle("visible", y > heros.offsetHeight * 0.7);
-    const r = etapes.getBoundingClientRect(), milieu = innerHeight * 0.6;
-    const p = Math.max(0, Math.min(1, (milieu - r.top) / r.height));
-    fil.style.setProperty("--fil", p);
-    lesEtapes.forEach((e) => e.classList.toggle("active", e.getBoundingClientRect().top + 28 < milieu));
   };
-  addEventListener("scroll", auDefilement, { passive: true });
-  addEventListener("resize", auDefilement);
-  auDefilement();
 
-  // le téléphone suit la souris
-  const tel = document.getElementById("telephone");
-  if (!calme && matchMedia("(hover: hover) and (min-width: 861px)").matches) {
-    heros.addEventListener("mousemove", (e) => {
-      const r = heros.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
-      tel.style.transform = `rotateY(${-14 + x * 16}deg) rotateX(${6 - y * 10}deg)`;
-    });
-    heros.addEventListener("mouseleave", () => { tel.style.transform = ""; });
-  }
+  // drapeaux
+  document.querySelectorAll(".langues a").forEach((a) => a.addEventListener("click", (e) => {
+    if (a.hasAttribute("aria-current")) { e.preventDefault(); return; }
+    try { localStorage.setItem("alacio-langue", a.dataset.langue); } catch (x) {}
+    if (location.hash) { e.preventDefault(); location.href = a.getAttribute("href") + location.hash; }
+  }));
 
   // halo sous la souris sur les objectifs
   document.querySelectorAll(".objectif").forEach((c) => c.addEventListener("mousemove", (e) => {
@@ -711,16 +903,233 @@
     c.style.setProperty("--y", `${e.clientY - r.top}px`);
   }));
 
-  // drapeaux : on retient le choix et on garde la section en cours
-  document.querySelectorAll(".langues a").forEach((a) => a.addEventListener("click", (e) => {
-    if (a.hasAttribute("aria-current")) { e.preventDefault(); return; }
-    try { localStorage.setItem("alacio-langue", a.dataset.langue); } catch (x) {}
-    if (location.hash) { e.preventDefault(); location.href = a.getAttribute("href") + location.hash; }
+  // FAQ : ouverture en douceur
+  document.querySelectorAll("details").forEach((d) => {
+    const s = d.querySelector("summary"), r = d.querySelector(".reponse");
+    s.addEventListener("click", (e) => {
+      if (calme || !avecGsap) return;
+      e.preventDefault();
+      if (d.open) {
+        gsap.to(r, { height: 0, opacity: 0, duration: .45, ease: "power3.inOut", onComplete: () => { d.open = false; gsap.set(r, { clearProps: "all" }); ScrollTrigger.refresh(); } });
+      } else {
+        d.open = true;
+        gsap.fromTo(r, { height: 0, opacity: 0 }, { height: "auto", opacity: 1, duration: .6, ease: "power3.out", onComplete: () => { gsap.set(r, { clearProps: "all" }); ScrollTrigger.refresh(); } });
+      }
+    });
+  });
+
+  if (!avecGsap || calme) {
+    // sans animation : contenu fixe, compteurs à leur valeur finale
+    document.querySelectorAll("[data-compte]").forEach(compte);
+    addEventListener("scroll", () => auDefilement(scrollY), { passive: true });
+    auDefilement(scrollY);
+    return;
+  }
+
+  html.classList.add("gsap");
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ---------- défilement fluide ----------
+  if (window.Lenis) {
+    lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1 });
+    lenis.on("scroll", (e) => { ScrollTrigger.update(); auDefilement(e.scroll); });
+    gsap.ticker.add((t) => lenis.raf(t * 1000));
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    addEventListener("scroll", () => auDefilement(scrollY), { passive: true });
+  }
+  auDefilement(scrollY);
+  document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener("click", (e) => {
+    const id = a.getAttribute("href"), cible = id === "#haut" ? 0 : document.querySelector(id);
+    if (cible === null) return;
+    e.preventDefault();
+    if (lenis) lenis.scrollTo(cible, { offset: id === "#haut" ? 0 : -20, duration: 1.4 });
+    else (cible === 0 ? scrollTo(0, 0) : cible.scrollIntoView());
+    history.replaceState(null, "", id);
   }));
 
-  // une seule vidéo joue à la fois (l'aperçu du téléphone continue en sourdine)
-  const films = document.querySelectorAll(".projet video");
-  films.forEach((v) => v.addEventListener("play", () => films.forEach((w) => { if (w !== v) w.pause(); })));
+  // ---------- titres : les mots montent ----------
+  document.querySelectorAll("[data-titre]").forEach((h) => {
+    decoupe(h);
+    gsap.from(h.querySelectorAll(".mot > span"), { yPercent: 115, duration: 1.2, ease: "expo.out", stagger: 0.045, scrollTrigger: { trigger: h, start: "top 88%" } });
+  });
+  gsap.utils.toArray("[data-monte]").forEach((el) => {
+    gsap.from(el, { y: 46, opacity: 0, duration: 1.2, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 90%" } });
+  });
+  gsap.utils.toArray("[data-cascade]").forEach((el) => {
+    gsap.from(el.children, { y: 36, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.07, scrollTrigger: { trigger: el, start: "top 88%" } });
+  });
+
+  // ---------- manifeste : les mots s'allument au défilement ----------
+  const manif = document.getElementById("manifeste");
+  decoupe(manif);
+  gsap.to(manif.querySelectorAll(".mot > span"), { "--o": 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: manif, start: "top 80%", end: "bottom 40%", scrub: true } });
+
+  // ---------- bandeau : accélère avec la vitesse du défilement ----------
+  const boucle = gsap.to(".bandeau .piste", { xPercent: -50, repeat: -1, duration: 38, ease: "none" });
+  ScrollTrigger.create({ onUpdate: (s) => {
+    const v = Math.min(7, 1 + Math.abs(s.getVelocity()) / 260);
+    gsap.to(boucle, { timeScale: v, duration: 0.15, overwrite: true, onComplete: () => gsap.to(boucle, { timeScale: 1, duration: 1.2, ease: "power2.out" }) });
+  } });
+
+  // ---------- compteurs ----------
+  document.querySelectorAll("[data-compte]").forEach((el) => ScrollTrigger.create({ trigger: el, start: "top 85%", once: true, onEnter: () => compte(el) }));
+
+  // ---------- réalisations : défilement horizontal sur grand écran ----------
+  const piste = document.getElementById("piste-h"), zone = document.getElementById("horizontal");
+  const mm = gsap.matchMedia();
+  mm.add("(min-width: 1021px)", () => {
+    const distance = () => piste.scrollWidth - innerWidth;
+    const tween = gsap.to(piste, { x: () => -distance(), ease: "none", scrollTrigger: {
+      trigger: zone, pin: true, scrub: 1, start: "top top", end: () => "+=" + distance(), invalidateOnRefresh: true,
+      onUpdate: (s) => {
+        document.getElementById("jauge-h").style.transform = `scaleX(${s.progress})`;
+        document.getElementById("numero-h").textContent = "0" + Math.min(3, 1 + Math.floor(s.progress * 2.999));
+      },
+    } });
+    piste.querySelectorAll(".panneau").forEach((p) => {
+      gsap.from(p.querySelector(".numero"), { xPercent: 60, opacity: 0, ease: "none", scrollTrigger: { trigger: p, containerAnimation: tween, start: "left 95%", end: "left 45%", scrub: true } });
+      gsap.fromTo(p.querySelector(".ecran"), { rotateY: -10, scale: .92 }, { rotateY: 0, scale: 1, ease: "none", scrollTrigger: { trigger: p, containerAnimation: tween, start: "left 100%", end: "left 35%", scrub: true } });
+    });
+  });
+  mm.add("(max-width: 1020px)", () => {
+    piste.querySelectorAll(".panneau").forEach((p) => gsap.from(p, { y: 60, opacity: 0, duration: 1.2, ease: "expo.out", scrollTrigger: { trigger: p, start: "top 88%" } }));
+  });
+
+  // ---------- méthode : le fil se remplit ----------
+  const etapes = document.getElementById("etapes");
+  gsap.to(etapes.querySelector(".fil"), { scaleY: 1, ease: "none", scrollTrigger: { trigger: etapes, start: "top 62%", end: "bottom 62%", scrub: true } });
+  etapes.querySelectorAll(".etape").forEach((e) => ScrollTrigger.create({ trigger: e, start: "top 62%", onEnter: () => e.classList.add("active"), onLeaveBack: () => e.classList.remove("active") }));
+
+  // ---------- fondateur, héros, pied de page ----------
+  gsap.to(".portrait .initiale", { yPercent: -18, ease: "none", scrollTrigger: { trigger: ".portrait", start: "top bottom", end: "bottom top", scrub: true } });
+  gsap.to(".heros > .page > div:first-child", { yPercent: 18, opacity: .2, ease: "none", scrollTrigger: { trigger: heros, start: "top top", end: "bottom top", scrub: true } });
+  gsap.from(".marque-geante span", { yPercent: 100, stagger: 0.06, ease: "none", scrollTrigger: { trigger: "footer", start: "top 95%", end: "bottom bottom", scrub: true } });
+
+  // ---------- souris : curseur, boutons aimantés, cartes inclinées, téléphone ----------
+  if (souris) {
+    const c = document.querySelector(".curseur"), pt = c.querySelector(".point"), an = c.querySelector(".anneau");
+    let x = -100, y = -100, ax = x, ay = y;
+    addEventListener("mousemove", (e) => { x = e.clientX; y = e.clientY; pt.style.transform = `translate3d(${x}px,${y}px,0)`; c.classList.remove("cache"); });
+    document.addEventListener("mouseleave", () => c.classList.add("cache"));
+    gsap.ticker.add(() => { ax += (x - ax) * 0.18; ay += (y - ay) * 0.18; an.style.transform = `translate3d(${ax}px,${ay}px,0)`; });
+    document.addEventListener("mouseover", (e) => {
+      const v = e.target.closest(".panneau .ecran"), l = e.target.closest("a, button, summary, .format");
+      c.classList.toggle("video", !!v);
+      c.classList.toggle("lien", !v && !!l);
+    });
+    html.classList.add("curseur-perso");
+
+    document.querySelectorAll(".magnetique").forEach((b) => {
+      const vx = gsap.quickTo(b, "x", { duration: .5, ease: "power3.out" }), vy = gsap.quickTo(b, "y", { duration: .5, ease: "power3.out" });
+      b.addEventListener("mousemove", (e) => { const r = b.getBoundingClientRect(); vx((e.clientX - r.left - r.width / 2) * .3); vy((e.clientY - r.top - r.height / 2) * .4); });
+      b.addEventListener("mouseleave", () => { vx(0); vy(0); });
+    });
+
+    document.querySelectorAll(".metier").forEach((m) => {
+      m.addEventListener("mousemove", (e) => { const r = m.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5; m.style.transform = `rotateY(${px * 14}deg) rotateX(${-py * 14}deg) translateY(-4px)`; });
+      m.addEventListener("mouseleave", () => { m.style.transform = ""; });
+    });
+
+    const tel = document.getElementById("telephone");
+    if (large()) {
+      heros.addEventListener("mousemove", (e) => {
+        const r = heros.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+        tel.style.transform = `rotateY(${-12 + px * 16}deg) rotateX(${5 - py * 10}deg)`;
+      });
+      heros.addEventListener("mouseleave", () => { tel.style.transform = ""; });
+    }
+  }
+
+  addEventListener("load", () => ScrollTrigger.refresh());
+})();
+</script>
+
+<script type="module">
+  // Logo Alacio en vraie 3D derrière le téléphone. Si WebGL ou le chargement échoue,
+  // le petit prisme dessiné en CSS reste affiché à la place.
+  const canvas = document.getElementById("scene3d");
+  const heros = document.querySelector(".heros"), tel = document.getElementById("telephone");
+  const calme = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try {
+    const THREE = await import("three");
+    const { RoomEnvironment } = await import("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js");
+
+    const rendu = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+    rendu.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    rendu.toneMapping = THREE.ACESFilmicToneMapping;
+    rendu.toneMappingExposure = 1.35;
+    rendu.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    const pmrem = new THREE.PMREMGenerator(rendu);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    camera.position.set(0, 0, 16);
+
+    // les deux pièces du logo, d'après le tracé SVG (48 × 48)
+    const forme = (pts) => { const s = new THREE.Shape(); pts.forEach(([x, y], i) => (i ? s.lineTo(x - 24, 24 - y) : s.moveTo(x - 24, 24 - y))); s.closePath(); return s; };
+    const extrusion = { depth: 6, bevelEnabled: true, bevelThickness: 1.4, bevelSize: 0.9, bevelSegments: 8, curveSegments: 1 };
+    const gauche = new THREE.ExtrudeGeometry(forme([[24, 0], [0, 48], [13, 48], [24, 24]]), extrusion);
+    const droite = new THREE.ExtrudeGeometry(forme([[24, 0], [24, 24], [35, 48], [48, 48]]), extrusion);
+    gauche.translate(-1.1, 0, -3); droite.translate(1.1, 0, -3);
+    const creme = new THREE.MeshPhysicalMaterial({ color: 0xf1ece4, roughness: 0.28, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.12, sheen: 0.4 });
+    const ambre = new THREE.MeshPhysicalMaterial({ color: 0xf0b06a, roughness: 0.26, metalness: 0.9, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+    const logo = new THREE.Group();
+    logo.add(new THREE.Mesh(gauche, creme), new THREE.Mesh(droite, ambre));
+    const pivot = new THREE.Group(); pivot.add(logo); scene.add(pivot);
+
+    const cle = new THREE.DirectionalLight(0xffd9b0, 3.2); cle.position.set(6, 8, 10); scene.add(cle);
+    const contre = new THREE.PointLight(0xe8a55c, 60, 40); contre.position.set(-6, -2, -6); scene.add(contre);
+
+    // poussière dorée
+    const n = 140, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - .5) * 16; pos[i * 3 + 1] = (Math.random() - .5) * 10; pos[i * 3 + 2] = (Math.random() - .5) * 8; }
+    const geoP = new THREE.BufferGeometry(); geoP.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const poussiere = new THREE.Points(geoP, new THREE.PointsMaterial({ color: 0xf3c48d, size: 0.045, transparent: true, opacity: 0.7, depthWrite: false }));
+    scene.add(poussiere);
+
+    // place le logo derrière le téléphone, légèrement décalé à droite
+    let base = { x: 0, y: 0 };
+    const cadre = () => {
+      const w = heros.clientWidth, h = heros.clientHeight;
+      rendu.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      const visH = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), visW = visH * camera.aspect;
+      const rh = heros.getBoundingClientRect(), rt = tel.getBoundingClientRect();
+      const cx = (rt.left + rt.width / 2 - rh.left) / w, cy = (rt.top + rt.height / 2 - rh.top) / h;
+      const etroit = w <= 860;
+      base = { x: (cx - .5) * visW + (rt.width / w) * visW * (etroit ? 0.34 : 0.5), y: -(cy - .5) * visH + (rt.height / h) * visH * 0.04 };
+      const taille = (rt.height / h) * visH * (etroit ? 0.95 : 1.02);
+      logo.scale.setScalar(taille / 48);
+    };
+    cadre();
+    addEventListener("resize", cadre);
+
+    let mx = 0, my = 0, sx = 0, sy = 0;
+    addEventListener("pointermove", (e) => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+
+    let actif = true;
+    new IntersectionObserver(([e]) => { actif = e.isIntersecting; }).observe(heros);
+    const horloge = new THREE.Clock();
+    const image = () => {
+      const t = horloge.getElapsedTime();
+      sx += (mx - sx) * 0.05; sy += (my - sy) * 0.05;
+      const p = Math.min(1, scrollY / heros.offsetHeight);
+      pivot.position.set(base.x, base.y + Math.sin(t * 0.8) * 0.12 + p * 2.5, 0);
+      logo.rotation.y = -0.5 + Math.sin(t * 0.35) * 0.3 + sx * 0.9 + p * 1.6;
+      logo.rotation.x = 0.08 + sy * 0.4 + Math.sin(t * 0.5) * 0.04;
+      logo.rotation.z = -0.12;
+      poussiere.rotation.y = t * 0.02; poussiere.position.y = Math.sin(t * 0.3) * 0.2;
+      rendu.render(scene, camera);
+    };
+    if (calme) { image(); }
+    else rendu.setAnimationLoop(() => { if (actif) image(); });
+    document.documentElement.classList.add("trois-d");
+  } catch (err) {
+    console.warn("3D indisponible, prisme CSS conservé.", err);
+  }
 </script>
 </body>
 </html>
