@@ -9,7 +9,25 @@
 <meta property="og:description" content="Pubs produit en 3D, démos d'application et vidéos pour les réseaux, sans shooting.">
 <meta property="og:image" content="https://portfolio.alacio.fr/images/solene.jpg">
 <meta property="og:url" content="https://portfolio.alacio.fr/">
+<meta property="og:locale" content="fr_FR">
 <meta name="theme-color" content="#0f0e0d">
+<link rel="alternate" hreflang="fr" href="https://portfolio.alacio.fr/">
+<link rel="alternate" hreflang="en" href="https://portfolio.alacio.fr/en.html">
+<link rel="alternate" hreflang="x-default" href="https://portfolio.alacio.fr/">
+<!-- detection-langue -->
+<script>
+  // Navigateur sans le français dans ses langues : on ouvre la version anglaise,
+  // sauf si le visiteur a déjà choisi le français avec le drapeau.
+  (function () {
+    var choix = null;
+    try { choix = localStorage.getItem("alacio-langue"); } catch (e) {}
+    if (choix === "fr" || /\/en(\.html)?$/.test(document.referrer.split(/[?#]/)[0])) return;
+    var langues = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "fr"];
+    var francais = langues.some(function (l) { return /^fr\b/i.test(l); });
+    if (choix === "en" || !francais) location.replace("/en.html" + location.hash);
+  })();
+</script>
+<!-- /detection-langue -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141210'/%3E%3Cpath d='M16 5 L5 27 H11 L16 16 Z' fill='%23f1ece4'/%3E%3Cpath d='M16 5 L16 16 L21 27 H27 Z' fill='%23e8a55c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,6 +78,14 @@
   .liens { display: flex; align-items: center; gap: 28px; font-size: 14.5px; }
   .liens a { text-decoration: none; color: var(--doux); transition: color .2s; }
   .liens a:hover { color: var(--texte); }
+
+  /* choix de la langue */
+  .langues { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--trait); border-radius: 999px; }
+  .liens .langues a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; transition: background .2s, color .2s; }
+  .langues a[aria-current] { background: var(--carte-2); color: var(--texte); }
+  .langues svg { width: 20px; height: 14px; border-radius: 3px; flex: none; box-shadow: 0 0 0 1px rgba(255, 255, 255, .12); }
+  .langues a:not([aria-current]) svg { opacity: .7; transition: opacity .2s; }
+  .langues a:hover svg { opacity: 1; }
 
   .bouton { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; transition: transform .2s, background .2s, box-shadow .2s, color .2s; white-space: nowrap; }
   .bouton:hover { transform: translateY(-2px); }
@@ -239,7 +265,7 @@
   .reveal.vu { opacity: 1; transform: none; }
 
   @media (max-width: 1020px) {
-    .liens a:not(.bouton) { display: none; }
+    .liens > a:not(.bouton) { display: none; }
     .metiers { grid-template-columns: repeat(2, 1fr); }
     .metiers .metier:last-child { grid-column: 1 / -1; }
     .objectif { grid-template-columns: 1fr; gap: 20px; }
@@ -264,6 +290,9 @@
   @media (max-width: 520px) {
     .liens .bouton span { display: none; }
     .liens .bouton { padding: 10px 12px; }
+    .liens { gap: 10px; }
+    .langues span { display: none; }
+    .liens .langues a { padding: 6px 8px; }
     .metiers { grid-template-columns: 1fr; }
     .chapo { font-size: 17px; }
     .objectif { padding: 22px; }
@@ -293,6 +322,10 @@
       <a href="#videos">Nos vidéos</a>
       <a href="#methode">Méthode</a>
       <a href="#fondateur">Fondateur</a>
+      <div class="langues" role="group" aria-label="Langue">
+        <a href="/" hreflang="fr" lang="fr" data-langue="fr" aria-current="page" title="Français" aria-label="Français"><svg viewBox="0 0 3 2" preserveAspectRatio="none" aria-hidden="true"><rect width="1" height="2" fill="#0055a4"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ef4135"/></svg><span>FR</span></a>
+        <a href="/en.html" hreflang="en" lang="en" data-langue="en" title="English" aria-label="English"><svg viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="drapeau-uk"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><rect width="60" height="30" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#drapeau-uk)" stroke="#c8102e" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#c8102e" stroke-width="6"/></svg><span>EN</span></a>
+      </div>
       <a class="bouton wa petit" href="https://wa.me/33756866590?text=Bonjour%20Alacio%2C%20j%27aimerais%20parler%20d%27une%20vid%C3%A9o%20pour%20mon%20produit." target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
         <span>WhatsApp</span>
@@ -676,6 +709,13 @@
     const r = c.getBoundingClientRect();
     c.style.setProperty("--x", `${e.clientX - r.left}px`);
     c.style.setProperty("--y", `${e.clientY - r.top}px`);
+  }));
+
+  // drapeaux : on retient le choix et on garde la section en cours
+  document.querySelectorAll(".langues a").forEach((a) => a.addEventListener("click", (e) => {
+    if (a.hasAttribute("aria-current")) { e.preventDefault(); return; }
+    try { localStorage.setItem("alacio-langue", a.dataset.langue); } catch (x) {}
+    if (location.hash) { e.preventDefault(); location.href = a.getAttribute("href") + location.hash; }
   }));
 
   // une seule vidéo joue à la fois (l'aperçu du téléphone continue en sourdine)
